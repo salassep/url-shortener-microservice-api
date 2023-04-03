@@ -25,29 +25,33 @@ app.get('/api/hello', function(req, res) {
 });
 
 app.post('/api/shorturl', (req, res) => {
-  const original_url = req.body.url;
-  
+  let original_url = req.body.url;
+
   dns.lookup(original_url, (err, addr) => {
     if (err) {
-      return res.json({error: 'invalid url'});
+      return res.json({ error: 'invalid url' });
     }
-  });
 
-  urls.push(original_url);
-  return res.json(
-        {
-          original_url,
-          short_url: urls.length,
-        }
-  )
+    urls.push(original_url);
+    return res.json(
+      {
+        original_url,
+        short_url: urls.length,
+      }
+    )
+  });
 });
 
 app.get('/api/shorturl/:short_url', (req, res) => {
   const short_url = parseInt(req.params.short_url);
-  console.log(urls[short_url-1]);
-  res.writeHead(301, {
-    Location: urls[short_url-1],
-  }).end(); 
+
+  const original_url = urls[short_url-1];
+
+  if (!original_url.includes('http')) {
+    original_url = 'http://' + original_url;
+  }
+
+  res.redirect(original_url);
 });
 
 app.listen(port, function() {
