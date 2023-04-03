@@ -27,31 +27,35 @@ app.get('/api/hello', function(req, res) {
 app.post('/api/shorturl', (req, res) => {
   let original_url = req.body.url;
 
-  dns.lookup(original_url, (err, addr) => {
-    if (err) {
-      return res.json({ error: 'invalid url' });
+  const isValidUrl = () => {
+    try {
+      const url = new URL(original_url);
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (err) {
+      return false;
     }
+  };
 
-    urls.push(original_url);
-    return res.json(
-      {
-        original_url,
-        short_url: urls.length,
-      }
-    )
-  });
+  if (!isValidUrl()) {
+    return res.json({
+      error: 'invalid url',
+    });
+  }
+
+  urls.push(original_url);
+  return res.json(
+    {
+      original_url,
+      short_url: urls.length,
+    }
+  )
 });
 
 app.get('/api/shorturl/:short_url', (req, res) => {
   const short_url = parseInt(req.params.short_url);
 
-  const original_url = urls[short_url-1];
-
-  if (!original_url.includes('http')) {
-    original_url = 'http://' + original_url;
-  }
-
-  res.redirect(original_url);
+  res.redirect(urls[short_url - 1]);
+  res.end();
 });
 
 app.listen(port, function() {
